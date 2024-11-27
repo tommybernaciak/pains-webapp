@@ -3,41 +3,16 @@
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
-import { useEffect, useState } from "react";
-
-const SUPPORTED_WALLETS = [
-  "nami",
-  "eternl",
-  "yoroi",
-  "typhon",
-  "gerowallet",
-  "nufi",
-  "lace",
-  "begin",
-];
+import { useWalletContext } from "@/providers/WalletProvider";
+import clsx from "clsx";
 
 export default function Connect() {
-  const [wallets, setWallets] = useState<string[]>([]);
-  const [selectedWallet, setSelectedWallet] = useState(null);
-
-  useEffect(() => {
-    console.log("Checking for Cardano wallets...", typeof window);
-    // Ensure window is available (runs on the client)
-    if (typeof window !== "undefined" && window.cardano) {
-      const availableWallets = Object.keys(window.cardano).filter((key) => {
-        return window.cardano[key]?.enable; // Only include wallets with the enable method
-      });
-      console.log("Available Cardano wallets:", availableWallets);
-      setWallets(availableWallets);
-    }
-  }, []);
-
+  const { supportedWallets, connectWallet, isAvailable } = useWalletContext();
   return (
     <div className="bg-[#F6F5FF] items-center justify-items-center min-h-screen p-20">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -48,14 +23,21 @@ export default function Connect() {
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 grid-rows-4 gap-4">
-            {SUPPORTED_WALLETS.map((wallet) => (
+            {supportedWallets.map((wallet) => (
               <Button
                 key={wallet}
-                className="bg-[#9C3390] text-white flex flex-col justify-center items-center px-4 py-5 rounded-md"
+                className={clsx(
+                  "bg-[#9C3390] text-white flex flex-col justify-center items-center px-4 py-5 rounded-md",
+                  isAvailable(wallet)
+                    ? "cursor-pointer hover:bg-[#CC3366] hover:text-white"
+                    : "cursor-not-allowed"
+                )}
                 variant="outline"
+                disabled={!isAvailable(wallet)}
+                onClick={() => connectWallet(wallet)}
               >
                 <p>{wallet}</p>
-                <p>{wallets.includes(wallet) ? "" : "(Not available)"}</p>
+                <p>{isAvailable(wallet) ? "" : "(Not available)"}</p>
               </Button>
             ))}
           </CardContent>
